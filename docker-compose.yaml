@@ -3,7 +3,7 @@ networks:
     driver: bridge
 
 services:
-  oauth_db:
+  autocomplete_db:
     image: postgres:17.5-alpine
     ports:
       - "5432:5432"
@@ -24,10 +24,30 @@ services:
     env_file:
       - .env
     volumes:
-      - postgres_oauth_data:/var/lib/postgresql/data
+      - postgres_autocomplete_data:/var/lib/postgresql/data
+    networks:
+      - autocomplete-network
+
+  autocomplete_redis:
+    image: redis:7.2
+    ports:
+      - "6379:6379"
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis_data:/data
+      - ./.docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    env_file:
+      - .env
     networks:
       - autocomplete-network
 
 volumes:
-  postgres_oauth_data:
+  postgres_autocomplete_data:
     driver: local

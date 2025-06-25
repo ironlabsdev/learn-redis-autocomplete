@@ -10,7 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	ironRouter "autocomplete/api/router"
+	ironRouter "autocomplete/api/resources/router"
 	db "autocomplete/database/generated"
 	"autocomplete/utils/env"
 	"autocomplete/utils/logger"
