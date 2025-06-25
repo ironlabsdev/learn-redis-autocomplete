@@ -9,6 +9,7 @@ import (
 
 type Conf struct {
 	DB           ConfDB
+	Redis        ConfRedis
 	Server       ConfServer
 	IsProduction bool
 }
@@ -31,6 +32,13 @@ type ConfDB struct {
 	DBName   string `env:"DB_NAME,required"`
 	Username string `env:"DB_USER,required"`
 	Password string `env:"DB_PASS,required"`
+}
+
+type ConfRedis struct {
+	Host     string `env:"REDIS_HOST,required"`
+	Port     int    `env:"REDIS_PORT,required"`
+	User     string `env:"REDIS_USER,required"`
+	Password string `env:"REDIS_PASSWORD"`
 }
 
 func New() *Conf {

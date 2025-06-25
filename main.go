@@ -12,11 +12,13 @@ import (
 
 	ironRouter "autocomplete/api/resources/router"
 	db "autocomplete/database/generated"
+	"autocomplete/internal/database"
 	"autocomplete/utils/env"
 	"autocomplete/utils/logger"
 	chi "github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 var logFilePath = "logs/app.log"
@@ -51,14 +53,29 @@ func main() {
 	defer pool.Close()
 	l.Info().Msg("Database connection established successfully")
 	queries := db.New(pool)
+
+	l.Info().Str("host", conf.Redis.Host).Int("port", conf.Redis.Port).Msg("Initializing RedisClient connection")
+	redisClient, err := database.NewRedisClient(conf.Redis, l)
+	if err != nil {
+		l.Fatal().Err(err).Msg("Failed to create RedisClient client")
+		return
+	}
+	defer func(Client *redis.Client) {
+		err = Client.Close()
+		if err != nil {
+			log.Fatalf("Error closing RedisClient client: %#v", err)
+		}
+	}(redisClient.Client)
+
 	chiRouter := chi.NewRouter()
 
 	routerController := ironRouter.Controller{
-		Pool:    pool,
-		Conf:    conf,
-		Logger:  l,
-		Router:  chiRouter,
-		Queries: queries,
+		Pool:        pool,
+		Conf:        conf,
+		RedisClient: redisClient,
+		Logger:      l,
+		Router:      chiRouter,
+		Queries:     queries,
 	}
 
 	routerController.RegisterRoutes()
